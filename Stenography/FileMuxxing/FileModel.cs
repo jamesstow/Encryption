@@ -15,7 +15,7 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
             this.FileName = fileName;
         }
 
-        Stream FileContents { get; set; }
-        string FileName { get; set; }
+        public Stream FileContents { get; set; }
+        public string FileName { get; set; }
     }
 }

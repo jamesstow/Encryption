@@ -12,6 +12,7 @@ namespace Pwnasaur.Encryption.Stenography.ImageWrappers
         int Height { get; }
         void LoadFile(Stream stream);
         void LoadFile(string fileLocation);
+		void Save (string fileLocation);
         void InitialiseEmpty(int width, int height);
         byte[] GetFullFile();
         byte GetRedAtPosition(int x, int y);

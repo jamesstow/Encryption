@@ -26,6 +26,11 @@ namespace Pwnasaur.Encryption.Stenography.ImageWrappers
             this._file = Bitmap.FromFile(fileLocation) as Bitmap;
         }
 
+		public void Save(string fileLocation)
+		{
+			this._file.Save (fileLocation);
+		}
+
         public void InitialiseEmpty(int width, int height)
         {
             this._file = new Bitmap(width, height);
