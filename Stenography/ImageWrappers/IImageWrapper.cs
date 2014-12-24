@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Pwnasaur.Encryption.Stenography.ImageWrappers
 {
-    public interface IImageWrapper
+    public interface IImageWrapper : IDisposable
     {
         int Width { get; }
         int Height { get; }

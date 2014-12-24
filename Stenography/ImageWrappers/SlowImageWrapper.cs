@@ -28,12 +28,19 @@ namespace Pwnasaur.Encryption.Stenography.ImageWrappers
 
 		public void Save(string fileLocation)
 		{
-			this._file.Save (fileLocation);
+			this._file.Save (fileLocation,System.Drawing.Imaging.ImageFormat.Png);
 		}
 
         public void InitialiseEmpty(int width, int height)
         {
             this._file = new Bitmap(width, height);
+			for (var x = 0; x < width; ++x) 
+			{
+				for (var y = 0; y < height; ++y) 
+				{
+					this._file.SetPixel(x,y,Color.FromArgb(255));
+				}
+			}
         }
 
         public byte[] GetFullFile()
@@ -129,5 +136,14 @@ namespace Pwnasaur.Encryption.Stenography.ImageWrappers
 
             this._file.SetPixel(x, y, newColour);
         }
+
+		#region IDisposable implementation
+
+		public void Dispose ()
+		{
+			this._file.Dispose ();
+		}
+
+		#endregion
     }
 }

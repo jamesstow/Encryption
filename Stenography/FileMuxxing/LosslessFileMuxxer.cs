@@ -117,31 +117,30 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 					p.G = container.GetGreenAtPosition (x, y);
 					p.B = container.GetBlueAtPosition (x, y);
 
-					if (spreadIndex < spreadBytes.Length) 
+					if (spreadIndex < spreadBytes.Length && false) 
 					{
 						var byteToHide = spreadBytes [spreadIndex];
 						var whichChannel = (ByteOrder)channelIndex;
 						switch (whichChannel) 
 						{
 							case ByteOrder.Red:
-							p.R = p.R & byteToHide;
+								p.R = (byte)((int)p.R & byteToHide);
 								break;
 							case ByteOrder.Green:
-							p.G = p.G & byteToHide;
+					             p.G = (byte)((int)p.G & byteToHide);
 								break;
 							case ByteOrder.Blue:
-							p.B = p.B & byteToHide;
+					             p.B = (byte)((int)p.B & byteToHide);
 								break;
 						}
 
-						channelIndex = channelIndex == numberOfChannels ? 0 : channelIndex + 1
+						channelIndex = channelIndex == numberOfChannels - 1 ? 0 : channelIndex + 1;
+						++spreadIndex;
 					}
 					
 					dataSet [x, y] = p;
-					++spreadIndex;
 				}
 			}
-            // populate data
 
             return dataSet;
         }
@@ -150,7 +149,91 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
         {
             FileModel fileModel = null;
 
-            // extract data
+			var numberOfChannels = Enum.GetValues (typeof(LosslessFileMuxxer.ByteOrder)).GetLength (0);
+			var sourceWidth = source.GetLength (0);
+			var sourceHeight = source.GetLength (1);
+			int byteSpread = this.getByteSpread ();
+			int bitShiftCount = (BITS_PER_CHANNEL - BITS_USED_PER_CHANNEL);
+			int maxValue = (0x01 << BITS_PER_CHANNEL) - 0x01;
+			int partMask = maxValue >> bitShiftCount;
+
+			var spreadBytes = new byte[sourceWidth * sourceHeight * byteSpread];
+			
+			var spreadIndex = 0;
+			var channelIndex = 0;
+			for (var x = 0; x < source.GetLength(0); ++x) 
+			{
+				for (var y = 0; y < source.GetLength(1); ++y) 
+				{
+					Pixel p = source [x, y];
+					for (var c = 0; c < numberOfChannels; ++c) 
+					{
+						var channel = (ByteOrder)channelIndex;
+						byte valueToUse;
+						var mustBreakToNextPixel = false;
+
+						switch (channel) 
+						{
+							case ByteOrder.Red:
+								valueToUse = (byte)(p.R & partMask);
+								break;
+							case ByteOrder.Green:
+			                    valueToUse = (byte)(p.G & partMask);
+								break;
+							case ByteOrder.Blue:
+			                    valueToUse = (byte)(p.B & partMask);
+								mustBreakToNextPixel = true;
+								break;
+							default:
+								throw new NotImplementedException ();
+						}
+
+						spreadBytes [spreadIndex] = valueToUse;
+						++spreadIndex;
+						channelIndex = channelIndex == numberOfChannels - 1 ? 0 : channelIndex + 1;
+
+						if(mustBreakToNextPixel)
+						{
+							break;
+						}
+					}
+				}
+			}
+
+			var unspreadBytes = new byte[sourceWidth * sourceHeight]; // don't yet know how many of these are useful yet
+			var unspreadIndex = 0;
+
+			spreadIndex = 0;
+
+			do 
+			{
+				byte b = 0x00;
+
+				for(var i = 0; i < byteSpread; ++i)
+				{
+					var s = spreadBytes[spreadIndex];
+
+					var spreadShift = i * BITS_USED_PER_CHANNEL;
+					var shifted = s << spreadShift;
+
+					b += (byte)shifted;
+
+					++spreadIndex;
+				}
+
+				unspreadBytes[unspreadIndex] = b;
+				++unspreadIndex;
+			} 
+			while(spreadIndex < spreadBytes.Length);
+
+			var headerBytes = new byte[EncryptionHeader.HEADER_LENGTH];
+			for (var i = 0; i < headerBytes.Length; ++i) 
+			{
+				var h = unspreadBytes[i];
+				headerBytes [i] = h;
+			}
+
+			var header = new EncryptionHeader(headerBytes);
 
             return fileModel;
         }

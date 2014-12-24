@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pwnasaur.Encryption", "Pwnasaur.Encryption.csproj", "{1540CB91-D455-4748-AC9B-AEFAAB8D6794}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cli", "..\..\..\..\..\usr\share\projects\personal\encryption\Cli\Cli.csproj", "{584DC42F-1C56-43FE-95E2-F8A4DDA484D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1540CB91-D455-4748-AC9B-AEFAAB8D6794}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1540CB91-D455-4748-AC9B-AEFAAB8D6794}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1540CB91-D455-4748-AC9B-AEFAAB8D6794}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1540CB91-D455-4748-AC9B-AEFAAB8D6794}.Release|Any CPU.Build.0 = Release|Any CPU
+		{584DC42F-1C56-43FE-95E2-F8A4DDA484D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{584DC42F-1C56-43FE-95E2-F8A4DDA484D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{584DC42F-1C56-43FE-95E2-F8A4DDA484D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{584DC42F-1C56-43FE-95E2-F8A4DDA484D8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = ..\..\..\..\..\usr\share\projects\personal\encryption\Cli\Cli.csproj
+	EndGlobalSection
+EndGlobal
