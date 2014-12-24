@@ -38,7 +38,7 @@ namespace Pwnasaur.Encryption.Stenography.ImageWrappers
 			{
 				for (var y = 0; y < height; ++y) 
 				{
-					this._file.SetPixel(x,y,Color.FromArgb(255));
+					this._file.SetPixel(x,y,Color.FromArgb(255,255,255,255));
 				}
 			}
         }
@@ -53,7 +53,7 @@ namespace Pwnasaur.Encryption.Stenography.ImageWrappers
             throw new NotImplementedException();
         }
 
-        private Color getColourAt(int x, int y)
+        public Color getColourAt(int x, int y)
         {
 
             if (this._file == null)

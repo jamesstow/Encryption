@@ -117,7 +117,7 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 					p.G = container.GetGreenAtPosition (x, y);
 					p.B = container.GetBlueAtPosition (x, y);
 
-					if (spreadIndex < spreadBytes.Length && false) 
+					if (spreadIndex < spreadBytes.Length) 
 					{
 						var byteToHide = spreadBytes [spreadIndex];
 						var whichChannel = (ByteOrder)channelIndex;
@@ -287,8 +287,9 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 
 		private class EncryptionHeader
 		{
-			public const byte HEADER_LENGTH = 36;
+			public const byte HEADER_LENGTH = 46;
 			private const byte MAX_FILENAME_LENGTH = 32;
+			public const string CORRUPTION_TEST_STRING = "TESTINGSTR";
 
 			public EncryptionHeader() { }
 			public EncryptionHeader(byte[] contents)
