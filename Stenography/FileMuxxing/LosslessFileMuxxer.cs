@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 {
@@ -235,7 +236,12 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 
 			var header = new EncryptionHeader(headerBytes);
 
+			var fileBytes = unspreadBytes.Skip (headerBytes.Length).Take (header.FileSize).ToArray ();
 
+			var ms = new MemoryStream (fileBytes);
+			ms.Position = 0;
+
+			fileModel = new FileModel (ms, header.FileName);
 
             return fileModel;
         }
