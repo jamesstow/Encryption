@@ -28,7 +28,7 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 			var numberOfChannels = Enum.GetValues (typeof(LosslessFileMuxxer.ByteOrder)).GetLength(0);
 			var totalBytesInImage = container.Width * container.Height * numberOfChannels;
 
-			var bytesAvailableForData = totalBytesInImage - EncryptionHeader.HEADER_LENGTH;
+			var bytesAvailableForData = totalBytesInImage - EncryptionHeader.GetHeaderLength();
 			var bytesNeededForData = fileModel.FileContents.Length * spread;
 
 			return bytesAvailableForData >= bytesNeededForData;
@@ -49,6 +49,7 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 			int bitShiftCount = (BITS_PER_CHANNEL - BITS_USED_PER_CHANNEL);
 			int maxValue = (0x01 << BITS_PER_CHANNEL) - 0x01;
 			int partMask = maxValue >> bitShiftCount;
+			int visibleMask = (byte)(maxValue << (0x08 - bitShiftCount));
 
 			var header = new EncryptionHeader ();
 			header.FileName = fileModel.FileName;
@@ -119,23 +120,29 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 
 					if (spreadIndex < spreadBytes.Length) 
 					{
-						var byteToHide = spreadBytes [spreadIndex];
-						var whichChannel = (ByteOrder)channelIndex;
-						switch (whichChannel) 
+						for (var c = 0; c < numberOfChannels; ++c) 
 						{
-							case ByteOrder.Red:
-								p.R = (byte)((int)p.R & byteToHide);
-								break;
-							case ByteOrder.Green:
-					             p.G = (byte)((int)p.G & byteToHide);
-								break;
-							case ByteOrder.Blue:
-					             p.B = (byte)((int)p.B & byteToHide);
-								break;
-						}
+							if (spreadIndex < spreadBytes.Length) 
+							{
+								var byteToHide = spreadBytes [spreadIndex];
+								var whichChannel = (ByteOrder)channelIndex;
+								switch (whichChannel) 
+								{
+									case ByteOrder.Red:
+										p.R = (byte)(((int)p.R & visibleMask) + byteToHide);
+										break;
+									case ByteOrder.Green:
+										p.G = (byte)(((int)p.G & visibleMask) + byteToHide);
+										break;
+									case ByteOrder.Blue:
+										p.B = (byte)(((int)p.B & visibleMask) + byteToHide);
+										break;
+								}
 
-						channelIndex = channelIndex == numberOfChannels - 1 ? 0 : channelIndex + 1;
-						++spreadIndex;
+								channelIndex = channelIndex == numberOfChannels - 1 ? 0 : channelIndex + 1;
+								++spreadIndex;
+							}
+						}
 					}
 					
 					dataSet [x, y] = p;
@@ -170,7 +177,6 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 					{
 						var channel = (ByteOrder)channelIndex;
 						byte valueToUse;
-						var mustBreakToNextPixel = false;
 
 						switch (channel) 
 						{
@@ -182,7 +188,6 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 								break;
 							case ByteOrder.Blue:
 			                    valueToUse = (byte)(p.B & partMask);
-								mustBreakToNextPixel = true;
 								break;
 							default:
 								throw new NotImplementedException ();
@@ -191,11 +196,6 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 						spreadBytes [spreadIndex] = valueToUse;
 						++spreadIndex;
 						channelIndex = channelIndex == numberOfChannels - 1 ? 0 : channelIndex + 1;
-
-						if(mustBreakToNextPixel)
-						{
-							break;
-						}
 					}
 				}
 			}
@@ -226,7 +226,7 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 			} 
 			while(spreadIndex < spreadBytes.Length);
 
-			var headerBytes = new byte[EncryptionHeader.HEADER_LENGTH];
+			var headerBytes = new byte[EncryptionHeader.GetHeaderLength()];
 			for (var i = 0; i < headerBytes.Length; ++i) 
 			{
 				var h = unspreadBytes[i];
@@ -234,6 +234,8 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 			}
 
 			var header = new EncryptionHeader(headerBytes);
+
+
 
             return fileModel;
         }
@@ -287,9 +289,12 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 
 		private class EncryptionHeader
 		{
-			public const byte HEADER_LENGTH = 46;
 			private const byte MAX_FILENAME_LENGTH = 32;
 			public const string CORRUPTION_TEST_STRING = "TESTINGSTR";
+
+			public static int GetHeaderLength(){
+				return MAX_FILENAME_LENGTH + CORRUPTION_TEST_STRING.Length + 4; // 4 is for 4 bytes per int (32 / 8 = 4)
+			}
 
 			public EncryptionHeader() { }
 			public EncryptionHeader(byte[] contents)
@@ -308,35 +313,48 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 				{
 					throw new ArgumentNullException("contents"); // dumbass.
 				}
-
-				if (contents.Length < HEADER_LENGTH)
+				
+				if (contents.Length < GetHeaderLength())
 				{
 					throw new Exception("Invalid header. Cannot decrypt");
 				}
 
-				var headerBytes = contents.Take(HEADER_LENGTH).ToArray();
+				var headerBytes = contents.Take(GetHeaderLength()).ToArray();
 
 				int index = 0;
 				for (var i = 0; i < 4; ++index, ++i)
 				{
 					var part = headerBytes[i];
-					eh.FileSize += (part << (i * 0x08));
+					var size = (part << (i * 0x08));
+					eh.FileSize += size;
 				}
 
-				eh.FileName = ASCIIEncoding.ASCII.GetString(headerBytes, 4, MAX_FILENAME_LENGTH).Replace("\0", string.Empty);
+				var corruptionTest = ASCIIEncoding.ASCII.GetString (headerBytes, 4, CORRUPTION_TEST_STRING.Length);
+				if (corruptionTest != CORRUPTION_TEST_STRING) 
+				{
+					throw new Exception("Corrupted header, cannot decrypt");
+				}
+
+				eh.FileName = ASCIIEncoding.ASCII.GetString(headerBytes, 4 + CORRUPTION_TEST_STRING.Length, MAX_FILENAME_LENGTH).Replace("\0", string.Empty);
 
 				return eh;
 			}
 
 			public byte[] ToBytes()
 			{
-				var header = new byte[HEADER_LENGTH];
+				var header = new byte[GetHeaderLength()];
 				//var fileSizeBytes = BitConverter.GetBytes(this.FileSize);
 				int index = 0;
 				for (var i = 0; i < 4; ++index, ++i)
 				{
-					var part = (byte)(this.FileSize >> (i * 0x08) & 0x08);
-					header[index] = part;
+					var part = this.FileSize >> (i * 0x08);
+					header[index] = (byte)part;
+				}
+
+				var corruptionTestBytes = ASCIIEncoding.ASCII.GetBytes (CORRUPTION_TEST_STRING);
+				for (var i = 0; i < corruptionTestBytes.Length; ++index, ++i)
+				{
+					header[index] = corruptionTestBytes[i];
 				}
 
 				var fileNameBytes = ASCIIEncoding.ASCII.GetBytes(this.FileName);
@@ -346,7 +364,7 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 					header[index] = fileNameBytes[i];
 				}
 
-				for (; index < HEADER_LENGTH; ++index)
+				for (; index < GetHeaderLength(); ++index)
 				{
 					header[index] = 0;
 				}
