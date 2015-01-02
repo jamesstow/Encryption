@@ -109,6 +109,8 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 			var numberOfChannels = Enum.GetValues (typeof(LosslessFileMuxxer.ByteOrder)).GetLength (0);
 			var channelIndex = 0;
 			spreadIndex = 0;
+			var rand = new Random (Guid.NewGuid ().GetHashCode ());
+			var randomiseNonDatasetBytes = false;
 
 			for (var x = 0; x < container.Width; ++x) 
 			{
@@ -143,6 +145,32 @@ namespace Pwnasaur.Encryption.Stenography.FileMuxxing
 								channelIndex = channelIndex == numberOfChannels - 1 ? 0 : channelIndex + 1;
 								++spreadIndex;
 							}
+							else 
+							{
+								if (randomiseNonDatasetBytes) 
+								{
+									// not a data pixel, give it a random value
+									var newVal = rand.Next (0, maxSpreadValue);
+									p.R = (byte)(((int)p.R & visibleMask) + newVal);
+									newVal = rand.Next (0, maxSpreadValue);
+									p.G = (byte)(((int)p.G & visibleMask) + newVal);
+									newVal = rand.Next (0, maxSpreadValue);
+									p.B = (byte)(((int)p.B & visibleMask) + newVal);
+								}
+							}
+						}
+					} 
+					else 
+					{
+						if (randomiseNonDatasetBytes) 
+						{
+							// not a data pixel, give it a random value
+							var newVal = rand.Next (0, maxSpreadValue);
+							p.R = (byte)(((int)p.R & visibleMask) + newVal);
+							newVal = rand.Next (0, maxSpreadValue);
+							p.G = (byte)(((int)p.G & visibleMask) + newVal);
+							newVal = rand.Next (0, maxSpreadValue);
+							p.B = (byte)(((int)p.B & visibleMask) + newVal);
 						}
 					}
 					

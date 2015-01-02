@@ -32,7 +32,9 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Program.cs">
+      <DeployService-Deploy>True</DeployService-Deploy>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -41,5 +43,13 @@
       <Project>{1540CB91-D455-4748-AC9B-AEFAAB8D6794}</Project>
       <Name>Pwnasaur.Encryption</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="input.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="original_image.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
