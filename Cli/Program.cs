@@ -73,7 +73,7 @@ namespace Cli
 
 				var reversed = muxxer.Demux (toDecrypt);
 
-				using (var fs = new FileStream("data/result_" + reversed.FileName,FileMode.Create)) {
+				using (var fs = new FileStream("result_" + reversed.FileName,FileMode.Create)) {
 					reversed.FileContents.CopyTo (fs);
 				}
 			}
